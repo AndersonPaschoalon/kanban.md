@@ -63,8 +63,11 @@ Mover um card (`kanban.md move`) muda só o emoji de estado, pra bater
 com a seção nova — épico e próprio nunca mudam nesse comando. Um card
 em "Feito" é histórico: não se edita, não se apaga sem `--force`. Pra
 mudar o **texto** de um card (não a seção/épico), use `card show`
-(lê o header+corpo exatos) e `card update --body "..."` (substitui o
-corpo inteiro, nunca um patch parcial) — nunca um editor.
+(lê o header+corpo exatos) e `card update` (substitui o corpo inteiro,
+nunca um patch parcial) — nunca um editor. `card new`/`card update`
+aceitam o corpo de três formas: `--body "..."` (texto curto, direto),
+`--body-file <arquivo>` (texto longo/multi-parágrafo, sem brigar com
+aspas do shell) ou `--body-file -` (lê de stdin, bom pra heredoc).
 
 **Épico** = um arquivo à parte (`<epic_dir>/<slug>.md`), com título
 obrigatório `# <emoji> Épico: <título>` — o emoji vem logo após o `#`,

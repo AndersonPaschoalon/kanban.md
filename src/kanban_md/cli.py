@@ -25,6 +25,28 @@ from kanban_md.kanban import (
 from kanban_md.project import new_project
 
 
+def _add_body_args(parser: argparse.ArgumentParser, help_text: str) -> None:
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--body", default=None, help=f"{help_text} -- string direto na linha de comando")
+    group.add_argument(
+        "--body-file",
+        type=Path,
+        default=None,
+        help=f"{help_text} -- lido de um arquivo (ou stdin, se o caminho for '-'); "
+        "melhor pra texto multi-parágrafo, evita brigar com aspas/crase do shell",
+    )
+
+
+def _resolve_body(args: argparse.Namespace) -> str:
+    if args.body_file is not None:
+        if str(args.body_file) == "-":
+            return sys.stdin.read().rstrip("\n")
+        if not args.body_file.is_file():
+            raise KanbanError(f"--body-file '{args.body_file}' não existe")
+        return args.body_file.read_text(encoding="utf-8").rstrip("\n")
+    return args.body or ""
+
+
 EPILOG = """\
 MODELO (leia isto antes de tocar em qualquer kanban.md -- resumo
 denso, a referência completa está no README):
@@ -49,6 +71,8 @@ denso, a referência completa está no README):
   próprio nunca mudam num `move`. Um card em Feito é histórico: não editar, não
   apagar sem --force. Pra mudar o TEXTO de um card (não a seção/épico), use
   `card show` (lê) + `card update` (substitui o corpo) -- nunca um editor.
+  `--body`/`--body-file <arquivo>`/`--body-file -` (stdin) em `card new`/
+  `card update`: prefira `--body-file` pra texto multi-parágrafo.
 
   Épico = arquivo em <epic_dir>/<slug>.md, título obrigatório `# <emoji> Épico: <título>`
   (emoji logo após o `#`, é dali que este CLI resolve qual emoji pertence a qual
@@ -144,7 +168,7 @@ def main(argv: list[str] | None = None) -> int:
     p_card_new.add_argument("--epic-dir", type=Path, required=True, help="pasta onde ficam os arquivos de épico")
     p_card_new.add_argument("--epic", required=True, help="slug do épico (arquivo <epic-dir>/<slug>.md já deve existir)")
     p_card_new.add_argument("--section", default="backlog", choices=sorted(KEY_TO_STATUS))
-    p_card_new.add_argument("--body", default="", help="corpo opcional (markdown livre) logo abaixo do header")
+    _add_body_args(p_card_new, "corpo opcional (markdown livre) logo abaixo do header")
 
     p_card_show = card_sub.add_parser(
         "show",
@@ -165,7 +189,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_card_update.add_argument("kanban", type=Path)
     p_card_update.add_argument("needle", help="trecho (case-insensitive) do título do card")
-    p_card_update.add_argument("--body", default="", help="corpo novo inteiro (markdown livre)")
+    _add_body_args(p_card_update, "corpo novo inteiro (markdown livre), substitui tudo")
 
     p_card_set_epic = card_sub.add_parser(
         "set-epic",
@@ -266,13 +290,13 @@ def main(argv: list[str] | None = None) -> int:
         elif args.cmd == "card" and args.card_cmd == "new":
             emoji = epic_emoji(args.epic_dir, args.epic)
             header = new_card(
-                args.kanban, args.title, args.category, emoji, args.section, args.body
+                args.kanban, args.title, args.category, emoji, args.section, _resolve_body(args)
             )
             print(f"criado em '{args.section}': {header}")
         elif args.cmd == "card" and args.card_cmd == "show":
             print(show_card(args.kanban, args.needle))
         elif args.cmd == "card" and args.card_cmd == "update":
-            header = update_card_body(args.kanban, args.needle, args.body)
+            header = update_card_body(args.kanban, args.needle, _resolve_body(args))
             print(f"corpo atualizado: {header}")
         elif args.cmd == "card" and args.card_cmd == "set-epic":
             emoji = epic_emoji(args.epic_dir, args.epic)
