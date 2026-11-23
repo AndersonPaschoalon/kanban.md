@@ -4,6 +4,7 @@ from kanban_md.kanban import (
     DEFAULT_WIP_LIMIT,
     KanbanError,
     delete_card,
+    init_kanban,
     list_cards,
     load,
     move_card,
@@ -11,9 +12,11 @@ from kanban_md.kanban import (
     read_wip_limit,
     set_card_epic,
     set_wip_limit,
+    show_card,
     trash_clean,
     trash_path,
     trash_show,
+    update_card_body,
 )
 
 SAMPLE = """# Épico de teste — Kanban
@@ -311,3 +314,86 @@ def test_trash_clean_empties_and_counts(kanban_path):
 
 def test_trash_clean_on_empty_trash_returns_zero(kanban_path):
     assert trash_clean(kanban_path) == 0
+
+
+def test_load_missing_file_raises_clean_error(tmp_path):
+    with pytest.raises(KanbanError, match="não existe"):
+        load(tmp_path / "nao-existe" / "kanban.md")
+
+
+def test_list_cards_on_missing_file_raises_clean_error(tmp_path):
+    with pytest.raises(KanbanError, match="não existe"):
+        list_cards(tmp_path / "kanban.md")
+
+
+def test_init_kanban_creates_empty_skeleton(tmp_path):
+    path = tmp_path / "sub" / "kanban.md"
+    created = init_kanban(path, "Meu projeto")
+
+    assert created is True
+    assert path.is_file()
+    assert list_cards(path) == []
+    assert read_wip_limit(load(path)) == DEFAULT_WIP_LIMIT
+    text = path.read_text(encoding="utf-8")
+    assert text.startswith("# Meu projeto")
+    for emoji in ("🏁", "🚧", "📋", "🧊", "🗒️"):
+        assert f"## {emoji}" in text
+
+
+def test_init_kanban_is_idempotent(tmp_path):
+    path = tmp_path / "kanban.md"
+    init_kanban(path, "Original")
+    created_again = init_kanban(path, "Outro título, ignorado")
+    assert created_again is False
+    assert path.read_text(encoding="utf-8").startswith("# Original")
+
+
+def test_init_kanban_accepts_custom_wip(tmp_path):
+    path = tmp_path / "kanban.md"
+    init_kanban(path, "Projeto", wip_limit=3)
+    assert read_wip_limit(load(path)) == 3
+
+
+def test_init_then_card_new_round_trips(tmp_path):
+    from kanban_md.epics import new_epic
+
+    kanban = tmp_path / "kanban.md"
+    epic_dir = tmp_path / "_epic"
+    init_kanban(kanban, "Projeto novo")
+    new_epic(epic_dir, "demo", "📦", "Demo")
+
+    new_card(kanban, "Primeiro card", "🔧", epic_emoji="📦", section="backlog")
+    cards = list_cards(kanban)
+    assert len(cards) == 1
+    assert cards[0].title == "Primeiro card"
+
+
+def test_show_card_returns_header_and_body(kanban_path):
+    text = show_card(kanban_path, "Card feito 1")
+    assert text == "#### ✅📦🔧 Card feito 1\n\nCorpo do card feito 1."
+
+
+def test_update_card_body_replaces_only_body(kanban_path):
+    header = update_card_body(kanban_path, "Card em andamento", "Novo corpo, substituindo o antigo.")
+    assert header == "#### 🟡📦🔧 Card em andamento"
+
+    text = kanban_path.read_text(encoding="utf-8")
+    assert "Novo corpo, substituindo o antigo." in text
+    assert "Corpo do card em andamento." not in text
+    # continua na mesma seção, posição preservada entre os irmãos
+    cards = list_cards(kanban_path)
+    em_andamento_titles = [c.title for c in cards if c.section_key == "em-andamento"]
+    assert em_andamento_titles == ["Card em andamento"]
+
+
+def test_update_card_body_preserves_sibling_order(kanban_path):
+    update_card_body(kanban_path, "Card feito 1", "Corpo novo do card 1.")
+    cards = list_cards(kanban_path)
+    feito_titles = [c.title for c in cards if c.section_key == "feito"]
+    assert feito_titles == ["Card feito 1", "Card feito 2"]
+
+
+def test_update_card_body_to_empty(kanban_path):
+    update_card_body(kanban_path, "Card feito 1", "")
+    text = show_card(kanban_path, "Card feito 1")
+    assert text == "#### ✅📦🔧 Card feito 1"

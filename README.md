@@ -17,8 +17,16 @@ pensada pra ser suficiente sozinha, sem precisar ler este arquivo.
 
 ## O modelo
 
+"Projeto" é uma convenção opcional (não obrigatória): uma pasta com
+`kanban.md` + `epics/` dentro, criados juntos por `project new`. Todo
+comando continua aceitando qualquer caminho de kanban/epic-dir, mesmo
+fora dessa convenção — um épico pode ser compartilhado por vários
+kanbans quando fizer sentido (ex: vários produtos, um só diretório de
+épicos cross-produto).
+
 Um kanban é um arquivo único (`kanban.md`), com cinco seções fixas,
-nesta ordem exata:
+nesta ordem exata (`init` cria esse esqueleto vazio — nunca crie um
+`kanban.md` à mão):
 
 ```
 ## 🏁 Feito
@@ -53,14 +61,20 @@ espaço entre eles:
 
 Mover um card (`kanban.md move`) muda só o emoji de estado, pra bater
 com a seção nova — épico e próprio nunca mudam nesse comando. Um card
-em "Feito" é histórico: não se edita, não se apaga sem `--force`.
+em "Feito" é histórico: não se edita, não se apaga sem `--force`. Pra
+mudar o **texto** de um card (não a seção/épico), use `card show`
+(lê o header+corpo exatos) e `card update --body "..."` (substitui o
+corpo inteiro, nunca um patch parcial) — nunca um editor.
 
 **Épico** = um arquivo à parte (`<epic_dir>/<slug>.md`), com título
 obrigatório `# <emoji> Épico: <título>` — o emoji vem logo após o `#`,
 e é dali (não de uma lista solta em outro lugar) que o CLI resolve
 qual emoji pertence a qual épico. Emoji de épico é único: nunca repete
 um emoji de estado/seção nem o de outro épico (`epic new` recusa
-colisão).
+colisão). `epic new --objective`/`--source` preenchem os campos de
+prosa já na criação (se omitidos, ficam `(preencher)`); `epic
+set-status` muda só o campo Status; `epic list` lista slug/emoji/
+título/status de todos os épicos de uma pasta.
 
 **Criação de card** (`kanban.md card new`) sempre exige épico (já
 existente) + emoji próprio — um card novo nasce com os três emojis;
@@ -97,14 +111,24 @@ uv run kanban.md --help
 pasta onde ficam os arquivos de épico (um por arquivo).
 
 ```bash
+# começar um projeto do zero (atalho: kanban.md + epics/ juntos)
+kanban.md project new <dir> --title "<título>"
+# ou separadamente:
+kanban.md init <kanban> --title "<título>"
+
 kanban.md list <kanban>
 kanban.md move <kanban> "<trecho do título>" <feito|em-andamento|backlog|idea-pool>
 
-kanban.md epic new <epic_dir> <slug> --emoji "📦" --title "<título>"
+kanban.md epic new <epic_dir> <slug> --emoji "📦" --title "<título>" \
+  --objective "<opcional>" --source "<opcional>"
+kanban.md epic list <epic_dir>
+kanban.md epic set-status <epic_dir> <slug> "<novo status>"
+
 kanban.md card new <kanban> \
   --title "<título>" --category "🔧" \
   --epic-dir <epic_dir> --epic <slug> --section backlog
-
+kanban.md card show <kanban> "<trecho do título>"
+kanban.md card update <kanban> "<trecho do título>" --body "<corpo novo inteiro>"
 kanban.md card set-epic <kanban> "<trecho do título>" --epic-dir <epic_dir> --epic <slug>
 kanban.md card delete <kanban> "<trecho do título>"
 

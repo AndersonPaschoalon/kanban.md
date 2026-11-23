@@ -23,6 +23,16 @@ SECTION_BY_EMOJI = {
 KEY_TO_STATUS = {key: status for key, status in SECTION_BY_EMOJI.values() if status}
 ALL_STATUS_EMOJI = set(KEY_TO_STATUS.values())
 
+# só usado por `init_kanban` pra gerar o título de cada seção -- a leitura
+# (parse_sections) nunca olha pro texto do título, só pro emoji.
+SECTION_TITLES = {
+    "🏁": "Feito",
+    "🚧": "Em andamento / próximo imediato",
+    "📋": "Backlog",
+    "🧊": "Idea Pool",
+    "🗒️": "Notas e Observações",
+}
+
 FEITO = "feito"
 WIP_SECTION = "em-andamento"
 DEFAULT_WIP_LIMIT = 10  # "grande" -- só existe pra não deixar a seção sem teto nenhum
@@ -100,11 +110,30 @@ def parse_cards(lines: list[str], section: Section) -> list[Card]:
 
 
 def load(path: Path) -> list[str]:
+    if not path.is_file():
+        raise KanbanError(f"kanban '{path}' não existe -- use 'init' pra criar")
     return path.read_text(encoding="utf-8").splitlines()
 
 
 def dump(path: Path, lines: list[str]) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def init_kanban(path: Path, title: str, wip_limit: int = DEFAULT_WIP_LIMIT) -> bool:
+    """Cria um `kanban.md` novo com as 5 seções fixas, vazias. Idempotente
+    -- devolve False sem mexer em nada se o arquivo já existir."""
+    if path.is_file():
+        return False
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    blocks = [f"# {title}", f"<!-- wip: {wip_limit} -->"]
+    for emoji, title_text in SECTION_TITLES.items():
+        if emoji == "🗒️":
+            blocks.append(f"## {emoji} {title_text}\n\n(nada ainda)")
+        else:
+            blocks.append(f"## {emoji} {title_text}")
+    path.write_text("\n\n---\n\n".join(blocks) + "\n", encoding="utf-8")
+    return True
 
 
 def _normalize_blank_runs(lines: list[str]) -> list[str]:
@@ -170,6 +199,33 @@ def list_cards(path: Path) -> list[Card]:
     for section in sections:
         cards.extend(parse_cards(lines, section))
     return cards
+
+
+def show_card(path: Path, needle: str) -> str:
+    """Devolve o header + corpo do card exatamente como está no arquivo --
+    use antes de `update_card_body`, pra editar em cima do conteúdo real."""
+    lines = load(path)
+    card = find_card(path, needle)
+    block = lines[card.header_idx : card.end_idx]
+    while block and block[-1].strip() == "":
+        block.pop()
+    return "\n".join(block)
+
+
+def update_card_body(path: Path, needle: str, body: str) -> str:
+    """Substitui só o corpo do card (tudo depois da linha de header) por
+    `body` -- nunca mexe no header (estado/épico/próprio/título) nem na
+    posição do card entre os irmãos da mesma seção. Alternativa
+    determinística a editar o arquivo à mão pra corrigir/evoluir o texto
+    de um card."""
+    lines = load(path)
+    card = find_card(path, needle)
+    header = lines[card.header_idx]
+
+    new_block = [header, "", body, ""] if body else [header, ""]
+    new_lines = lines[: card.header_idx] + new_block + lines[card.end_idx :]
+    dump(path, _normalize_blank_runs(new_lines))
+    return header
 
 
 def find_card(path: Path, needle: str) -> Card:
