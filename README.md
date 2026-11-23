@@ -11,7 +11,7 @@ card apagado pra uma lixeira em vez de descartar de vez.
 Regra de ouro: **nunca edite um `kanban.md` ou arquivo de épico com um
 editor de texto** — toda mutação passa por um subcomando deste CLI.
 Cada subcomando garante não tocar em nenhum card/linha além do que foi
-pedido; uma edição manual não tem essa garantia. `process --help` (e o
+pedido; uma edição manual não tem essa garantia. `kanban.md --help` (e o
 `--help` de cada subcomando) traz a mesma referência densa abaixo,
 pensada pra ser suficiente sozinha, sem precisar ler este arquivo.
 
@@ -51,7 +51,7 @@ espaço entre eles:
 4. Qualquer emoji fora desse esquema é lixo: remova, não ignore
    silenciosamente.
 
-Mover um card (`process move`) muda só o emoji de estado, pra bater
+Mover um card (`kanban.md move`) muda só o emoji de estado, pra bater
 com a seção nova — épico e próprio nunca mudam nesse comando. Um card
 em "Feito" é histórico: não se edita, não se apaga sem `--force`.
 
@@ -62,7 +62,7 @@ qual emoji pertence a qual épico. Emoji de épico é único: nunca repete
 um emoji de estado/seção nem o de outro épico (`epic new` recusa
 colisão).
 
-**Criação de card** (`process card new`) sempre exige épico (já
+**Criação de card** (`kanban.md card new`) sempre exige épico (já
 existente) + emoji próprio — um card novo nasce com os três emojis;
 a forma de dois emojis só é tolerada em cards antigos, não é um
 caminho válido daqui pra frente. Por convenção (não imposto por
@@ -74,21 +74,21 @@ por arquivo via um comentário `<!-- wip: N -->` em qualquer linha do
 `kanban.md` (`N <= 0` = sem limite). `move`/`card new` pra essa seção
 recusam se o teto estourar.
 
-**Delete nunca é definitivo**: `process card delete` move o card pro
-`.trash.md` ao lado do kanban. `process trash clean` é a única forma
+**Delete nunca é definitivo**: `kanban.md card delete` move o card pro
+`.trash.md` ao lado do kanban. `kanban.md trash clean` é a única forma
 de descartar de vez.
 
 ## Instalação
 
 ```bash
 uv tool install git+https://github.com/AndersonPaschoalon/kanban.md.git
-process --help
+kanban.md --help
 ```
 
 Ou, clonado localmente:
 
 ```bash
-uv run process --help
+uv run kanban.md --help
 ```
 
 ## Uso
@@ -97,22 +97,22 @@ uv run process --help
 pasta onde ficam os arquivos de épico (um por arquivo).
 
 ```bash
-process list <kanban>
-process move <kanban> "<trecho do título>" <feito|em-andamento|backlog|idea-pool>
+kanban.md list <kanban>
+kanban.md move <kanban> "<trecho do título>" <feito|em-andamento|backlog|idea-pool>
 
-process epic new <epic_dir> <slug> --emoji "📦" --title "<título>"
-process card new <kanban> \
+kanban.md epic new <epic_dir> <slug> --emoji "📦" --title "<título>"
+kanban.md card new <kanban> \
   --title "<título>" --category "🔧" \
   --epic-dir <epic_dir> --epic <slug> --section backlog
 
-process card set-epic <kanban> "<trecho do título>" --epic-dir <epic_dir> --epic <slug>
-process card delete <kanban> "<trecho do título>"
+kanban.md card set-epic <kanban> "<trecho do título>" --epic-dir <epic_dir> --epic <slug>
+kanban.md card delete <kanban> "<trecho do título>"
 
-process wip show <kanban>
-process wip set <kanban> <N>   # <= 0 = sem limite (default: 10)
+kanban.md wip show <kanban>
+kanban.md wip set <kanban> <N>   # <= 0 = sem limite (default: 10)
 
-process trash show <kanban>
-process trash clean <kanban>
+kanban.md trash show <kanban>
+kanban.md trash clean <kanban>
 ```
 
 ## Rodando os testes

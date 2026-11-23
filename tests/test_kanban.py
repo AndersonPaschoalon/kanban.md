@@ -1,6 +1,6 @@
 import pytest
 
-from process_cli.kanban import (
+from kanban_md.kanban import (
     DEFAULT_WIP_LIMIT,
     KanbanError,
     delete_card,

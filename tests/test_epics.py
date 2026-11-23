@@ -1,7 +1,7 @@
 import pytest
 
-from process_cli.epics import epic_emoji, new_epic
-from process_cli.kanban import KanbanError
+from kanban_md.epics import epic_emoji, new_epic
+from kanban_md.kanban import KanbanError
 
 
 def test_new_epic_creates_template(tmp_path):

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from process_cli.kanban import ALL_STATUS_EMOJI, KanbanError, SECTION_BY_EMOJI
+from kanban_md.kanban import ALL_STATUS_EMOJI, KanbanError, SECTION_BY_EMOJI
 
 RESERVED_EMOJI = ALL_STATUS_EMOJI | set(SECTION_BY_EMOJI)
 

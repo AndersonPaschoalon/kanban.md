@@ -4,8 +4,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from process_cli.epics import epic_emoji, existing_epic_emoji, new_epic
-from process_cli.kanban import (
+from kanban_md.epics import epic_emoji, existing_epic_emoji, new_epic
+from kanban_md.kanban import (
     KanbanError,
     KEY_TO_STATUS,
     delete_card,
@@ -69,7 +69,7 @@ denso, a referência completa está no README):
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="process",
+        prog="kanban.md",
         description="CLI determinística pra um kanban em Markdown puro (cards, épicos, WIP, trash).",
         epilog=EPILOG,
         formatter_class=argparse.RawDescriptionHelpFormatter,
