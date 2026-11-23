@@ -80,10 +80,13 @@ denso, a referência completa está no README):
   repete um estado/seção nem outro épico (`epic new` recusa colisão). `epic
   set-status` muda o campo Status sem precisar editar o arquivo à mão.
 
-  "Projeto" é convenção opcional, não obrigatória: uma pasta com `kanban.md` +
-  `epics/` dentro, criados juntos por `project new`. Todo outro comando continua
-  aceitando qualquer caminho de kanban/epic-dir, mesmo fora dessa convenção --
-  um épico pode ser compartilhado por vários kanbans se fizer sentido.
+  "Projeto" é convenção opcional, não obrigatória: uma pasta com `<dir>/kanban.md`
+  e `_epic/` AO LADO (`<dir>/../_epic`, irmã, nunca dentro de `<dir>`) --
+  `project new` cria os dois juntos. `_epic` fica um nível acima de propósito:
+  um épico pode envolver mais de um projeto, então dois projetos com o mesmo
+  diretório pai compartilham o mesmo `_epic/` automaticamente. Todo outro
+  comando continua aceitando qualquer caminho de kanban/epic-dir, mesmo fora
+  dessa convenção.
 
   Card novo SEMPRE exige épico (já existente) + emoji próprio -- nunca crie um
   card novo com só 2 emojis, essa forma só é tolerada em cards antigos. Por
@@ -128,10 +131,11 @@ def main(argv: list[str] | None = None) -> int:
     project_sub = p_project.add_subparsers(dest="project_cmd", required=True)
     p_project_new = project_sub.add_parser(
         "new",
-        help="cria <dir>/kanban.md + <dir>/epics/ juntos (idempotente)",
-        description="Atalho pra convenção 'um projeto = uma pasta com kanban.md e epics/ dentro'. "
-        "Equivale a 'init <dir>/kanban.md' + mkdir <dir>/epics. Não obrigatório -- kanban "
-        "e epic-dir continuam podendo ficar em qualquer lugar, inclusive compartilhados "
+        help="cria <dir>/kanban.md + <dir>/../_epic/ (irmã, não dentro) juntos (idempotente)",
+        description="Atalho pra convenção 'kanban.md dentro do projeto, _epic/ ao lado dele'. "
+        "Equivale a 'init <dir>/kanban.md' + mkdir <dir>/../_epic. _epic fica um nível acima "
+        "de propósito: dois projetos com o mesmo pai compartilham o mesmo _epic/. Não "
+        "obrigatório -- kanban e epic-dir continuam podendo ficar em qualquer lugar, inclusive "
         "entre vários projetos.",
     )
     p_project_new.add_argument("project_dir", type=Path)

@@ -18,11 +18,13 @@ pensada pra ser suficiente sozinha, sem precisar ler este arquivo.
 ## O modelo
 
 "Projeto" é uma convenção opcional (não obrigatória): uma pasta com
-`kanban.md` + `epics/` dentro, criados juntos por `project new`. Todo
-comando continua aceitando qualquer caminho de kanban/epic-dir, mesmo
-fora dessa convenção — um épico pode ser compartilhado por vários
-kanbans quando fizer sentido (ex: vários produtos, um só diretório de
-épicos cross-produto).
+`kanban.md` dentro, e `_epic/` **ao lado** dela (irmã, nunca dentro) —
+`project new <dir>` cria os dois juntos (`<dir>/kanban.md` +
+`<dir>/../_epic/`). `_epic/` fica um nível acima de propósito: um
+épico pode envolver mais de um projeto, então dois projetos com o
+mesmo diretório pai compartilham automaticamente o mesmo `_epic/`.
+Todo comando continua aceitando qualquer caminho de kanban/epic-dir,
+mesmo fora dessa convenção.
 
 Um kanban é um arquivo único (`kanban.md`), com cinco seções fixas,
 nesta ordem exata (`init` cria esse esqueleto vazio — nunca crie um
@@ -114,7 +116,7 @@ uv run kanban.md --help
 pasta onde ficam os arquivos de épico (um por arquivo).
 
 ```bash
-# começar um projeto do zero (atalho: kanban.md + epics/ juntos)
+# começar um projeto do zero (atalho: <dir>/kanban.md + <dir>/../_epic/ juntos)
 kanban.md project new <dir> --title "<título>"
 # ou separadamente:
 kanban.md init <kanban> --title "<título>"
