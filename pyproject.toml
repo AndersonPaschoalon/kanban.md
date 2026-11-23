@@ -1,7 +1,7 @@
 [project]
 name = "process-cli"
 version = "0.1.0"
-description = "CLI determinística pra mover cards entre seções de um kanban.md (docs/process)"
+description = "CLI determinística pra gerenciar um kanban em Markdown puro (cards, épicos, WIP, trash)"
 requires-python = ">=3.10"
 dependencies = []
 

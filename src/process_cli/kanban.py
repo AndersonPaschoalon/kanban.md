@@ -2,7 +2,7 @@
 hoje é feita à mão: corta o bloco do card de uma seção, cola em outra,
 troca só o emoji de status. Nunca toca em nenhum outro card.
 
-Convenção real (ver docs/process.md): cada seção é um `## <emoji> <título>`,
+Convenção real (ver README.md): cada seção é um `## <emoji> <título>`,
 cada card é um `#### <status><épico><próprio> <título>`. O emoji de
 status muda com a seção; épico e próprio nunca mudam aqui.
 """
@@ -188,7 +188,7 @@ def set_card_epic(path: Path, needle: str, new_epic_emoji: str, known_epic_emoji
     """Adiciona o emoji de épico a um card que ainda não tem (2 emojis),
     ou troca o que já existe -- nunca mexe no emoji de estado nem no
     'próprio'/título. `known_epic_emoji` é o conjunto de emojis já
-    registrados em `docs/process/_epic/` (ver `epics.existing_epic_emoji`),
+    registrados na pasta de épicos (ver `epics.existing_epic_emoji`),
     é como reconhecemos se o card já tinha um épico sem precisar separar
     emoji por "caractere" (frágil com clusters Unicode)."""
     lines = load(path)
